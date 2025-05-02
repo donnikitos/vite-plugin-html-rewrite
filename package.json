@@ -1,0 +1,43 @@
+{
+	"name": "vite-plugin-html-rewrite",
+	"version": "0.0.1",
+	"description": "A Vite plugin for programmatically rewriting HTML tags",
+	"author": "Nikita 'donnikitos' Nitichevski <me@donnikitos.com> (https://nititech.de/)",
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com:donnikitos/vite-plugin-html-rewrite.git"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"typescript": "^5.8.3",
+		"vite": "^6.3.4",
+		"vite-plugin-dts": "^4.5.3"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"homepage": "https://github.com/donnikitos/vite-plugin-html-rewrite",
+	"keywords": [
+		"vite",
+		"vite plugin",
+		"html rewrite"
+	],
+	"license": "MIT",
+	"scripts": {
+		"build": "npx vite build",
+		"prepack": "npx vite build"
+	},
+	"type": "module",
+	"dependencies": {
+		"dom-serializer": "^2.0.0",
+		"domhandler": "^5.0.3",
+		"htmlparser2": "^10.0.0"
+	}
+}
