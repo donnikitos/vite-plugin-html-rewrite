@@ -1,7 +1,8 @@
 import type { Plugin, PluginOption } from 'vite';
 import { DomUtils, parseDocument } from 'htmlparser2';
-import { Element, Text, ProcessingInstruction, type AnyNode } from 'domhandler';
+import { Element } from 'domhandler';
 import render, { type DomSerializerOptions } from 'dom-serializer';
+import spliceString from './utils/spliceString';
 
 const serializeOptions: DomSerializerOptions = {
 	xmlMode: true,
@@ -36,7 +37,7 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 
 	function handleTransform(input: string, rewrites: Rewrite[]) {
 		const doc = parseDocument(input, {
-			xmlMode: !!serializeOptions.xmlMode,
+			xmlMode: true,
 			lowerCaseAttributeNames: false,
 			lowerCaseTags: false,
 			recognizeSelfClosing: true,
@@ -44,42 +45,47 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 			withStartIndices: true,
 		});
 
+		const matches: {
+			start: number;
+			end: number;
+			out: ReturnType<Rewrite['render']>;
+		}[] = [];
+
 		rewrites.forEach((rewrite) => {
 			DomUtils.findAll(rewrite.match, doc).forEach((element, i) => {
-				const out = rewrite.render(
-					{
-						attribs: element.attribs,
-						attributes: element.attributes,
-						name: element.name,
-						namespace: element.namespace,
-						nodeType: element.nodeType,
-						startIndex: element.startIndex,
-						tagName: element.tagName,
-						type: element.type,
-						'x-attribsNamespace': element['x-attribsNamespace'],
-						'x-attribsPrefix': element['x-attribsPrefix'],
-						innerHTML: render(element.children, serializeOptions),
-					},
-					i,
-				);
-
-				if (out) {
-					let node: AnyNode = new Text(out);
-					if (out.startsWith('<') && out.endsWith('>')) {
-						node = new ProcessingInstruction(
-							'custom-code',
-							out.substring(1, out.length - 1),
-						);
-					}
-
-					DomUtils.replaceElement(element, node);
-				} else {
-					DomUtils.removeElement(element);
-				}
+				matches.unshift({
+					start: element.startIndex!,
+					end: element.endIndex!,
+					out: rewrite.render(
+						{
+							attribs: element.attribs,
+							attributes: element.attributes,
+							name: element.name,
+							namespace: element.namespace,
+							nodeType: element.nodeType,
+							startIndex: element.startIndex,
+							tagName: element.tagName,
+							type: element.type,
+							'x-attribsNamespace': element['x-attribsNamespace'],
+							'x-attribsPrefix': element['x-attribsPrefix'],
+							innerHTML: render(
+								element.children,
+								serializeOptions,
+							),
+						},
+						i,
+					),
+				});
 			});
 		});
 
-		return render(doc, serializeOptions);
+		let output = input;
+
+		matches.forEach(({ start, end, out }) => {
+			output = spliceString(output, start, end - start + 1, out || '');
+		});
+
+		return output;
 	}
 
 	function handlePluginOrder(rewrites: Rewrite[], order: 'pre' | 'post') {
