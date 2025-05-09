@@ -1,6 +1,6 @@
 {
 	"name": "vite-plugin-html-rewrite",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "A Vite plugin for programmatically rewriting HTML tags",
 	"author": "Nikita 'donnikitos' Nitichevski <me@donnikitos.com> (https://nititech.de/)",
 	"repository": {
@@ -27,7 +27,13 @@
 	"keywords": [
 		"vite",
 		"vite plugin",
-		"html rewrite"
+		"html rewrite",
+		"replace tags",
+		"replace html",
+		"rewrite html",
+		"transform html",
+		"transform tags",
+		"transformIndexHtml"
 	],
 	"license": "MIT",
 	"scripts": {
