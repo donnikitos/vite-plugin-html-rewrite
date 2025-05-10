@@ -23,6 +23,7 @@ export type Rewrite = {
 			| 'namespace'
 			| 'nodeType'
 			| 'startIndex'
+			| 'endIndex'
 			| 'tagName'
 			| 'type'
 			| 'x-attribsNamespace'
@@ -48,41 +49,53 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 		const matches: {
 			start: number;
 			end: number;
-			out: ReturnType<Rewrite['render']>;
+			render: string;
 		}[] = [];
 
 		rewrites.forEach((rewrite) => {
 			DomUtils.findAll(rewrite.match, doc).forEach((element, i) => {
-				matches.unshift({
-					start: element.startIndex!,
-					end: element.endIndex!,
-					out: rewrite.render(
+				const innerHTML = render(element.children, serializeOptions);
+				const rewrittenInnerHTML = innerHTML
+					? handleTransform(innerHTML, rewrites)
+					: '';
+
+				const offset = rewrittenInnerHTML.length - innerHTML.length;
+
+				const out =
+					rewrite.render(
 						{
 							attribs: element.attribs,
 							attributes: element.attributes,
 							name: element.name,
 							namespace: element.namespace,
 							nodeType: element.nodeType,
-							startIndex: element.startIndex,
+							startIndex: element.startIndex!,
+							endIndex: element.endIndex! + offset,
 							tagName: element.tagName,
 							type: element.type,
 							'x-attribsNamespace': element['x-attribsNamespace'],
 							'x-attribsPrefix': element['x-attribsPrefix'],
-							innerHTML: render(
-								element.children,
-								serializeOptions,
-							),
+							innerHTML: rewrittenInnerHTML,
 						},
 						i,
-					),
+					) || '';
+
+				matches.push({
+					start: element.startIndex!,
+					end: element.endIndex! + offset,
+					render: out,
 				});
 			});
 		});
 
 		let output = input;
 
-		matches.forEach(({ start, end, out }) => {
-			output = spliceString(output, start, end - start + 1, out || '');
+		matches.sort((a, b) => b.start - a.start);
+
+		matches.forEach(({ start, end, render }) => {
+			const currentLength = end - start + 1;
+
+			output = spliceString(output, start, currentLength, render);
 		});
 
 		return output;
