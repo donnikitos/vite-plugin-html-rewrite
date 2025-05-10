@@ -104,6 +104,7 @@ type Transformation = {
       | 'namespace'
       | 'nodeType'
       | 'startIndex'
+      | 'endIndex'
       | 'tagName'
       | 'type'
       | 'x-attribsNamespace'
