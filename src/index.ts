@@ -53,7 +53,9 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 		}[] = [];
 
 		rewrites.forEach((rewrite) => {
-			DomUtils.findAll(rewrite.match, doc).forEach((element, i) => {
+			let element: Element | null = null;
+			let i = 0;
+			while ((element = DomUtils.findOne(rewrite.match, doc)) !== null) {
 				const innerHTML = render(element.children, serializeOptions);
 				const rewrittenInnerHTML = innerHTML
 					? handleTransform(innerHTML, rewrites)
@@ -82,10 +84,14 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 
 				matches.push({
 					start: element.startIndex!,
-					end: element.endIndex! + offset,
+					end: element.endIndex!,
 					render: out,
 				});
-			});
+
+				DomUtils.removeElement(element);
+
+				i++;
+			}
 		});
 
 		let output = input;
