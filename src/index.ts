@@ -1,15 +1,8 @@
 import type { Plugin, PluginOption } from 'vite';
 import { DomUtils, parseDocument } from 'htmlparser2';
 import { Element } from 'domhandler';
-import render, { type DomSerializerOptions } from 'dom-serializer';
+import render from 'dom-serializer';
 import spliceString from './utils/spliceString';
-
-const serializeOptions: DomSerializerOptions = {
-	xmlMode: true,
-	selfClosingTags: true,
-	encodeEntities: false,
-	emptyAttrs: true,
-};
 
 export type Rewrite = {
 	order?: 'pre' | 'post';
@@ -56,7 +49,11 @@ export function rewriteHTML(rewrites: Rewrite[]): PluginOption {
 			let element: Element | null = null;
 			let i = 0;
 			while ((element = DomUtils.findOne(rewrite.match, doc)) !== null) {
-				const innerHTML = render(element.children, serializeOptions);
+				const innerHTML = render(element.children, {
+					xmlMode: false,
+					encodeEntities: false,
+					emptyAttrs: true,
+				});
 				const rewrittenInnerHTML = innerHTML
 					? handleTransform(innerHTML, rewrites)
 					: '';
